@@ -22,6 +22,6 @@ Generating a high school schedule is a complex task that involves satisfying var
 
 ## Contribution
 - **Contributors**:
-  - [![pedromartip](https://github.com/pedromartip.png?size=50)](https://github.com/pedromartip)
-  - [![JasonNoboa](https://github.com/JasonNoboa.png?size=50)](https://github.com/JasonNoboa)
+  - [![](https://github.com/pedromartip.png?size=50)](https://github.com/pedromartip)
+  - [![](https://github.com/JasonNoboa.png?size=50)](https://github.com/JasonNoboa)
 
