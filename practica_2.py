@@ -148,6 +148,23 @@ def minimized_idle_hours(schedule, teacher_assignment):
 
     return sum(teacher_idle_hours.values()) == 0
 
+def tournament_selection(population, fitness_scores, tournament_size=3):
+    # Initialize an empty list to store the randomly selected schedules
+    selected_schedules = []
+
+    # Randomly pick 'tournament_size' number of schedules
+    for _ in range(tournament_size):
+        random_index = random.randint(0, len(population) - 1)
+        selected_schedules.append((population[random_index], fitness_scores[random_index]))
+
+    # Sort the selected schedules by their fitness scores in descending order
+    selected_schedules.sort(key=lambda x: x[1], reverse=True)
+
+    # Select the schedule with the highest fitness score
+    best_schedule = selected_schedules[0][0]
+
+    return best_schedule
+
 if __name__ == "__main__":
     num_classes = 3 # Number of classes for which the schedule needs to be generated.
     subjects = ['Math', 'English', 'Chemistry', 'History', 'Physics']
