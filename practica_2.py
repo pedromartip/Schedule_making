@@ -2,7 +2,7 @@ import random
 
 def generate_schedule(num_classes, subjects, teachers, hours_per_subject):
     days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
-    hours = list(range(8, 15))
+    hours = list(range(8, 18))
 
     # Initialize schedules
     schedules = []
@@ -22,6 +22,8 @@ def generate_schedule(num_classes, subjects, teachers, hours_per_subject):
                 if teacher_assignment[subject] in teachers and subject_hours[subject] > 0:
                     schedule[(day, hour)] = subject
                     subject_hours[subject] -= 1
+                else: 
+                    schedule[(day, hour)] = '---'
 
         schedules.append(schedule)
 
@@ -30,7 +32,7 @@ def generate_schedule(num_classes, subjects, teachers, hours_per_subject):
 def print_schedule(schedule):
     # Print the schedule in a readable format
     print("{:<10} {:<10} {:<10} {:<10} {:<10} {:<10}".format('', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'))
-    for hour in range(8, 15):
+    for hour in range(8, 18):
         print("{:<10}".format(f'{hour}:00-{hour + 1}:00'), end=' ')
         for day in ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']:
             print("{:<10}".format(schedule.get((day, hour), '')), end=' ')
@@ -148,31 +150,57 @@ def minimized_idle_hours(schedule, teacher_assignment):
 
     return sum(teacher_idle_hours.values()) == 0
 
-def tournament_selection(population, fitness_scores, tournament_size=3):
-    # Initialize an empty list to store the randomly selected schedules
-    selected_schedules = []
+"""
+RECOMBINATION AND MUTATION
+"""
 
-    # Randomly pick 'tournament_size' number of schedules
-    for _ in range(tournament_size):
-        random_index = random.randint(0, len(population) - 1)
-        selected_schedules.append((population[random_index], fitness_scores[random_index]))
+def recombination(parent1, parent2):
+    children1 = dict(parent1)
+    children2 = dict(parent2)
 
-    # Sort the selected schedules by their fitness scores in descending order
-    selected_schedules.sort(key=lambda x: x[1], reverse=True)
+    # Select the cross point
+    cross_point = len(children1) // 2
 
-    # Select the schedule with the highest fitness score
-    best_schedule = selected_schedules[0][0]
+    # Swap subjects between parents
+    parent1_keys = list(parent1.keys())
+    for i in range(cross_point, len(children1)):
+        children1[parent1_keys[i]], children2[parent1_keys[i]] = children2[parent1_keys[i]], children1[parent1_keys[i]]
 
-    return best_schedule
+    return children1, children2
+
+
+def mutacion(schedule, subjects):
+    muted_schedule = dict(schedule)
+
+    # Select a random position to make the mutation
+    mutation_index = random.choice(range(len(muted_schedule)))
+
+    # Change the subject in the selected position
+    mutation_site = list(muted_schedule.keys())[mutation_index]
+    new_subject = random.choice(subjects)  
+    muted_schedule[mutation_site] = new_subject
+
+    return muted_schedule
+
+
+#Podemos agregar un codigo que permita solo 2 horas seguidas de la misma materia, para que el horario sea mejor 
+#podria ser un soft constraint
 
 if __name__ == "__main__":
-    num_classes = 3 # Number of classes for which the schedule needs to be generated.
+    num_classes = 5 # Number of classes for which the schedule needs to be generated.
     subjects = ['Math', 'English', 'Chemistry', 'History', 'Physics']
     teachers = ['Pep', 'Juan', 'Cr7', 'Puigdemont', 'Francisco F.']
-    hours_per_subject = {'Math': 5, 'English': 4, 'Chemistry': 3, 'History': 2, 'Physics': 3}
+    hours_per_subject = {'Math': 6, 'English': 6, 'Chemistry': 6, 'History': 6, 'Physics': 6}
 
     schedules = generate_schedule(num_classes, subjects, teachers, hours_per_subject)
+    
+    #hijo1, hijo2 = recombination(schedules[1],schedules[2])
+    
     for class_num, schedule in enumerate(schedules, start=1):
         print(f"\nSchedule for Class {class_num}:\n")
         print_schedule(schedule)
         print('\n' + '-'*50)  # Separate shcedules with a line for better visualisation
+        
+           
+        
+        
