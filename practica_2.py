@@ -1,14 +1,12 @@
 import random
 
-def generate_schedule(num_classes, subjects, teachers, hours_per_subject):
+def generate_schedule(num_classes, subjects, teachers, hours_per_subject, teacher_assignment):
     days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
     hours = list(range(8, 18))
 
     # Initialize schedules
     schedules = []
 
-    # Assign teachers to subjects
-    teacher_assignment = {subject: random.choice(teachers) for subject in subjects}
 
     for class_num in range(1, num_classes + 1):
         schedule = {}
@@ -54,7 +52,7 @@ def calculate_fitness(schedule, hours_per_subject, teacher_assignment, teacher_m
         score -= hard_constraint
 
     if exceeds_teacher_max_hours(schedule, teacher_assignment, teacher_max_hours):
-        fitness_score -= hard_constraint
+        score -= hard_constraint
 
     # Soft Constraints
     if not evenly_distributed_subjects(schedule):
@@ -75,8 +73,11 @@ def exceeds_teacher_max_hours(schedule, teacher_assignment, teacher_max_hours):
 
     # Iterate over the schedule to count the hours for each teacher
     for _, subject in schedule.items():
-        teacher = teacher_assignment[subject]
-        scheduled_hours[teacher] += 1
+        try:
+            teacher = teacher_assignment[subject]
+            scheduled_hours[teacher] += 1
+        except:
+            pass
 
     # Check if any teacher exceeds their maximum hours
     for teacher, max_hours in teacher_max_hours.items():
@@ -91,10 +92,13 @@ def has_overlapping_classes(schedule, teacher_assignment):
     teacher_timetable = {teacher: [] for teacher in teacher_assignment.values()}
     
     for (day, hour), subject in schedule.items():
-        teacher = teacher_assignment[subject]
-        if (day, hour) in teacher_timetable[teacher]:
-            return True
-        teacher_timetable[teacher].append((day, hour))
+        try: 
+            teacher = teacher_assignment[subject]
+            if (day, hour) in teacher_timetable[teacher]:
+                return True
+            teacher_timetable[teacher].append((day, hour))
+        except:
+            pass
 
     return False
 
@@ -103,8 +107,11 @@ def has_overlapping_classes(schedule, teacher_assignment):
 def meets_required_hours(schedule, hours_per_subject):
     scheduled_hours = {subject: 0 for subject in hours_per_subject}
 
-    for subject in schedule.values():
-        scheduled_hours[subject] += 1
+    try:
+        for subject in schedule.values():
+            scheduled_hours[subject] += 1
+    except: 
+        pass
 
     for subject, required_hours in hours_per_subject.items():
         if scheduled_hours[subject] != required_hours:
@@ -140,8 +147,11 @@ def minimized_idle_hours(schedule, teacher_assignment):
         daily_schedule = {day: [] for day in ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']}
         
         for (day, hour), subject in schedule.items():
-            if teacher_assignment[subject] == teacher:
-                daily_schedule[day].append(hour)
+            try:
+                if teacher_assignment[subject] == teacher:
+                    daily_schedule[day].append(hour)
+            except:
+                pass
 
         for hours in daily_schedule.values():
             sorted_hours = sorted(hours)
@@ -182,19 +192,36 @@ def mutacion(schedule, subjects):
 
     return muted_schedule
 
+def teacherAssignment(subjects, teachers):
+    # Assign teachers to subjects
+    if len(subjects) == len(teachers):
+        teacher_assignment = {subjects[i]: teachers[i] for i in range(len(subjects))}
+    else:
+        teacher_assignment = {subject: random.choice(teachers) for subject in subjects}
+        
+    return teacher_assignment
+
 
 #Podemos agregar un codigo que permita solo 2 horas seguidas de la misma materia, para que el horario sea mejor 
 #podria ser un soft constraint
 
 if __name__ == "__main__":
     num_classes = 5 # Number of classes for which the schedule needs to be generated.
-    subjects = ['Math', 'English', 'Chemistry', 'History', 'Physics']
-    teachers = ['Pep', 'Juan', 'Cr7', 'Puigdemont', 'Francisco F.']
+    
+    #Declare inputs
+    teacher_max_hours = {'Pep': 20, 'Juan': 20, 'Cr7':20 , 'Puigdemont': 20, 'Francisco F.': 20}
     hours_per_subject = {'Math': 6, 'English': 6, 'Chemistry': 6, 'History': 6, 'Physics': 6}
+    subjects = list(hours_per_subject.keys())
+    teachers = list(teacher_max_hours.keys())
+    
+    
+    teacher_assignment = teacherAssignment(subjects, teachers)
 
-    schedules = generate_schedule(num_classes, subjects, teachers, hours_per_subject)
+    schedules = generate_schedule(num_classes, subjects, teachers, hours_per_subject, teacher_assignment)
     
     #hijo1, hijo2 = recombination(schedules[1],schedules[2])
+    
+    fitness_function = calculate_fitness(schedules[1], hours_per_subject, teacher_assignment, teacher_max_hours)
     
     for class_num, schedule in enumerate(schedules, start=1):
         print(f"\nSchedule for Class {class_num}:\n")
