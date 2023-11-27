@@ -1,4 +1,5 @@
 import random
+import copy
 
 def generate_schedule(num_classes, subjects, teachers, hours_per_subject, teacher_assignment):
     days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
@@ -24,6 +25,19 @@ def generate_schedule(num_classes, subjects, teachers, hours_per_subject, teache
                     schedule[(day, hour)] = '---'
 
         schedules.append(schedule)
+
+    return schedules
+
+def generate_poblation(poblation, num_classes, subjects, teachers, hours_per_subject, teacher_assignment):
+    # Inicializar el diccionario de horarios
+    schedules = {}
+
+    for i in range(poblation):
+        # Generar un horario
+        schedule = generate_schedule(num_classes, subjects, teachers, hours_per_subject, teacher_assignment)
+        
+        # Agregar el horario al diccionario de horarios
+        schedules[f'schedules{i+1}'] = schedule
 
     return schedules
 
@@ -164,33 +178,101 @@ def minimized_idle_hours(schedule, teacher_assignment):
 RECOMBINATION AND MUTATION
 """
 
-def recombination(parent1, parent2):
-    children1 = dict(parent1)
-    children2 = dict(parent2)
+def recombine_population(poblation1, poblation2):
+    # Asegúrate de que ambas poblaciones tienen el mismo tamaño
+    assert len(poblation1) == len(poblation2)
+    
+    new_poblation1 = []
+    new_poblation2 = []
+    
+    # Aplica la función recombine a cada par de diccionarios
+    for schedule1, schedule2 in zip(poblation1, poblation2):
+        # Obtén todas las horas posibles en el horario
+        times = list(schedule1.keys())
+        
+        # Selecciona un punto de corte aleatorio
+        cut_point = random.randint(0, len(times))
+        
+        # Crea los nuevos horarios
+        new_schedule1 = {}
+        new_schedule2 = {}
+        
+        # Intercambia las partes del horario después del punto de corte
+        for i, time in enumerate(times):
+            if i < cut_point:
+                new_schedule1[time] = schedule1[time]
+                new_schedule2[time] = schedule2[time]
+            else:
+                new_schedule1[time] = schedule2[time]
+                new_schedule2[time] = schedule1[time]
+        
+        new_poblation1.append(new_schedule1)
+        new_poblation2.append(new_schedule2)
+    
+    return new_poblation1, new_poblation2
 
-    # Select the cross point
-    cross_point = len(children1) // 2
+'''
+Es otro tipo de recombinacion
+'''
+def recombine_uniform(poblation1, poblation2):
+    # Asegúrate de que ambas poblaciones tienen el mismo tamaño
+    assert len(poblation1) == len(poblation2)
+    
+    new_poblation1 = []
+    new_poblation2 = []
+    
+    for schedule1, schedule2 in zip(poblation1, poblation2):
+        # Obtén todas las horas posibles en el horario
+        times = list(schedule1.keys())
+        
+        # Crea los nuevos horarios
+        new_schedule1 = {}
+        new_schedule2 = {}
+        
+        # Para cada hora, selecciona aleatoriamente la asignatura de uno de los horarios parentales
+        for time in times:
+            if random.random() < 0.5:
+                new_schedule1[time] = schedule1[time]
+                new_schedule2[time] = schedule2[time]
+            else:
+                new_schedule1[time] = schedule2[time]
+                new_schedule2[time] = schedule1[time]
+                
+        new_poblation1.append(new_schedule1)
+        new_poblation2.append(new_schedule2)
+    
+    return new_poblation1, new_poblation2
 
-    # Swap subjects between parents
-    parent1_keys = list(parent1.keys())
-    for i in range(cross_point, len(children1)):
-        children1[parent1_keys[i]], children2[parent1_keys[i]] = children2[parent1_keys[i]], children1[parent1_keys[i]]
 
-    return children1, children2
+def mutation(scheduleOriginal):
+    '''
+    Se puede hacer que mute un unico horario cuando estemos cerca de la respuesta, para una 
+    una diversidad controlada, pero si estamos lejos de la respuesta podriamos hacer mutar a todos 
+    los horarios dentro de schedules para una diversidad mayor y explorar mas posibilidades
+    '''
+    schedules = copy.deepcopy(scheduleOriginal)
+    
+    rand = random.choice(range(len(schedules)))
+    schedule = schedules[rand]
+    # Obtén todos los días y horas posibles en el horario
+    days_hours = list(schedule.keys())
 
+    # Selecciona dos días y horas aleatorios
+    day_hour1 = random.choice(days_hours)
+    day_hour2 = random.choice(days_hours)
 
-def mutacion(schedule, subjects):
-    muted_schedule = dict(schedule)
+    # Intercambia las asignaturas programadas para esos días y horas
+    while schedule[day_hour1] == '---' and schedule[day_hour2] == '---' or schedule[day_hour1] == schedule[day_hour2]:
+      day_hour1 = random.choice(days_hours)
+      day_hour2 = random.choice(days_hours)  
 
-    # Select a random position to make the mutation
-    mutation_index = random.choice(range(len(muted_schedule)))
+    schedule[day_hour1], schedule[day_hour2] = schedule[day_hour2], schedule[day_hour1]
 
-    # Change the subject in the selected position
-    mutation_site = list(muted_schedule.keys())[mutation_index]
-    new_subject = random.choice(subjects)  
-    muted_schedule[mutation_site] = new_subject
+    schedules[rand] = schedule
+    
+    
+    return schedules
 
-    return muted_schedule
 
 def teacherAssignment(subjects, teachers):
     # Assign teachers to subjects
@@ -206,28 +288,48 @@ def teacherAssignment(subjects, teachers):
 #podria ser un soft constraint
 
 if __name__ == "__main__":
-    num_classes = 5 # Number of classes for which the schedule needs to be generated.
+    num_classes = 1 # Number of classes for which the schedule needs to be generated.
     
     #Declare inputs
     teacher_max_hours = {'Pep': 20, 'Juan': 20, 'Cr7':20 , 'Puigdemont': 20, 'Francisco F.': 20}
-    hours_per_subject = {'Math': 6, 'English': 6, 'Chemistry': 6, 'History': 6, 'Physics': 6}
+    hours_per_subject = {'Math': 1, 'English': 1, 'Chemistry': 1, 'History': 1, 'Physics': 1}
     subjects = list(hours_per_subject.keys())
     teachers = list(teacher_max_hours.keys())
-    
-    
     teacher_assignment = teacherAssignment(subjects, teachers)
-
-    schedules = generate_schedule(num_classes, subjects, teachers, hours_per_subject, teacher_assignment)
     
-    #hijo1, hijo2 = recombination(schedules[1],schedules[2])
+    num_poblation = 5
     
-    fitness_function = calculate_fitness(schedules[1], hours_per_subject, teacher_assignment, teacher_max_hours)
+    poblation = generate_poblation(num_poblation, num_classes, subjects, teachers, hours_per_subject, teacher_assignment)
     
-    for class_num, schedule in enumerate(schedules, start=1):
-        print(f"\nSchedule for Class {class_num}:\n")
-        print_schedule(schedule)
-        print('\n' + '-'*50)  # Separate shcedules with a line for better visualisation
-        
+    
+    hijo1, hijo2 = recombine_population(poblation['schedules1'], poblation['schedules2'])
+    #hijo1, hijo2 = recombine_uniform(poblation['schedules1'], poblation['schedules2'])
+    
+    #mutado = mutation(hijo2)
+    
+    #fitness_function = calculate_fitness(schedules[1], hours_per_subject, teacher_assignment, teacher_max_hours)
+    
+           
+    for class_num, schedule in enumerate(poblation['schedules1'], start=1):
+       print(f"\nSchedule for Class {class_num}:\n")
+       print_schedule(schedule)
+       print('\n' + '-'*50)  # Separate shcedules with a line for better visualisation
+       
+    for class_num, schedule in enumerate(poblation['schedules2'], start=1):
+       print(f"\nSchedule for Class {class_num}:\n")
+       print_schedule(schedule)
+       print('\n' + '-'*50)  # Separate shcedules with a line for better visualisation
+           
+    for class_num, schedule in enumerate(hijo1, start=1):
+       print(f"\nSchedule for Class {class_num}:\n")
+       print_schedule(schedule)
+       print('\n' + '-'*50)  # Separate shcedules with a line for better visualisation
+       
+    for class_num, schedule in enumerate(hijo2, start=1):
+       print(f"\nSchedule for Class {class_num}:\n")
+       print_schedule(schedule)
+       print('\n' + '-'*50)  # Separate shcedules with a line for better visualisation
+         
            
         
         
