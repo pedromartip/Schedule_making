@@ -1,4 +1,4 @@
-# High School Schedule Generation Using Evolutionary Algorithms
+## High School Schedule Generation Using Evolutionary Algorithms
 
 ## Project Overview
 This project aims to develop a solution for generating high school schedules using evolutionary algorithms. The goal is to efficiently allocate time slots to classes, courses, and professors while considering various constraints.
