@@ -4,7 +4,7 @@ import sys
 import random
 import matplotlib.pyplot as plt
 
-''' INICIALIZACIÓN DE LOS DATOS Y OTRAS FUNCIONES '''
+''' INICIALIZACIÓN DE LOS DATOS Y OTRAS FUNCIONES ''' 
 
 def assign_labels(names,hours): #Genera la cantidad de horas establecidas para cada nombre en 'names'
     labels = []
@@ -241,6 +241,28 @@ def ranking_selection(population, all_fitness_functions):
     
     return rank1, rank2      
         
+"""
+TOURNAMENT SELECTION
+"""
+def tournament_selection(population, fitness_scores, tournament_size=3):
+    # Initialize an empty list to store the randomly selected schedules
+    selected_schedules = []
+    #print(f'population: {len(population)}')
+    #print('EMPIEZA EL TORNEO..')
+    # Randomly pick 'tournament_size' number of schedules
+    for _ in range(tournament_size):
+        random_index = random.randint(0, len(population) - 1)
+        selected_schedules.append((population[random_index], fitness_scores[random_index]))
+        #print(f'Se ha elegido a {f"schedules{random_index}"}, con una puntuación de {fitness_scores[random_index]}')
+   
+    # Sort the selected schedules by their fitness scores in descending order
+    selected_schedules.sort(key=lambda x: x[1], reverse=True)
+    # Select the schedule with the highest fitness score
+    first_best = selected_schedules[0][0]
+    second_best = selected_schedules[1][0]
+
+    #print(f'Se ha elejido el padre1: {first_best}\n y el padre2: {second_best}')
+    return first_best, second_best
 
 ''' COMBINATION '''
 #Primer tipo de recombinación : Jason
@@ -436,8 +458,8 @@ if __name__ == "__main__":
         totalfitness = population_fitness_function(teachers, dict_by_numbers, population)
         
             #REALIZAMOS LA SELECCIÓN DE LOS PADRES
-        padre1, padre2 = ranking_selection(population, totalfitness)
-        
+        #padre1, padre2 = ranking_selection(population, totalfitness)
+        padre1, padre2 = tournament_selection(population, totalfitness)
             #REALIZAMOS LA GENERACIÓN DE LOS DESCENDIENTES
         #hijo1, hijo2 = uniform_crossover(padre1, padre2)
         
