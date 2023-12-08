@@ -471,4 +471,4 @@ if __name__ == "__main__":
         print(f'Generación #: {generation} , Mejor puntuacion = {max_puntuacion}')
         
         if max_puntuacion > fitness_goal:
-            break      
+            break       
