@@ -256,8 +256,8 @@ def tournament_selection(population, fitness_scores, tournament_size=3):
         #print(f'Se ha elegido a {f"schedules{random_index}"}, con una puntuación de {fitness_scores[random_index]}')
    
     # Sort the selected schedules by their fitness scores in descending order
-    selected_schedules.sort(key=lambda x: x[1], reverse=True)
-    # Select the schedule with the highest fitness score
+    selected_schedules.sort(key=lambda x: x[1], reverse=False)  # Reverse = True --> Ponemos primero la de mas high score 
+    # Select the schedule with the smallest fitness score (As smaller better is the score)
     first_best = selected_schedules[0][0]
     second_best = selected_schedules[1][0]
 
@@ -454,35 +454,35 @@ if __name__ == "__main__":
     
     while generation < max_generations:
         
-            #CALCULAMOS EL FITNESS FUNCTION
+        #CALCULAMOS EL FITNESS FUNCTION
         totalfitness = population_fitness_function(teachers, dict_by_numbers, population)
         
-            #REALIZAMOS LA SELECCIÓN DE LOS PADRES
+        #REALIZAMOS LA SELECCIÓN DE LOS PADRES
         #padre1, padre2 = ranking_selection(population, totalfitness)
         padre1, padre2 = tournament_selection(population, totalfitness)
-            #REALIZAMOS LA GENERACIÓN DE LOS DESCENDIENTES
-        #hijo1, hijo2 = uniform_crossover(padre1, padre2)
         
+        #REALIZAMOS LA GENERACIÓN DE LOS DESCENDIENTES
+        #hijo1, hijo2 = uniform_crossover(padre1, padre2)
         hijo1 = recombination(padre1, padre2, hours_per_week)
         hijo2 = recombination(padre1, padre2, hours_per_week)
         
         #hijo1 = recombination_with_hours(padre1, padre2, hoursClass)
         #hijo2 = recombination_with_hours(padre1, padre2, hoursClass)
         
-            #APLICAMOS LA MUTACIÓN
+        #APLICAMOS LA MUTACIÓN
         if random.random() < mutation_rate:
             swap_mutation(hijo1)
             swap_mutation(hijo2)
         
-            #AGREGAMOS LOS HIJOS A LA POBLACIÓN
+        #AGREGAMOS LOS HIJOS A LA POBLACIÓN
         population[len(population)] = hijo1
         population[len(population)] = hijo2
         
-            #REALIZAMOS LA SELECCIÓN DE SOBREVIVIENTES
+        #REALIZAMOS LA SELECCIÓN DE SOBREVIVIENTES
         totalfitness = population_fitness_function(teachers, dict_by_numbers, population)
         population = elitist_selection(population, totalfitness, population_size)
         
-            #EXTRAEMOS EL MEJOR PROSPECTO DE LA NUEVA POBLACIÓN
+        #EXTRAEMOS EL MEJOR PROSPECTO DE LA NUEVA POBLACIÓN
         best_prospect = choose_best_prospect(teachers, dict_by_numbers, population)
         best_score = fitness_function(teachers, best_prospect, dict_by_numbers)
         print(totalfitness)
