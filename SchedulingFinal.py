@@ -424,7 +424,7 @@ if __name__ == "__main__":
     INITIALIZATION OF THE DATA TO CREATE THE INDIVIDUALS OF THE POPULATION
     '''
     hours_per_week = 7 #Number of work hours per week
-    subjectsName = ['Math', 'Pyshics', 'Socials', 'English', 'Quemich','Science']
+    subjectsName = ['Math', 'Pyshics', 'Socials', 'English', 'Chemistry','Natural Science']
     hoursClass = [[5,4,4,3,4,4], #ClassA
                   [5,4,4,3,4,4], #ClassB
                   [5,4,4,3,4,4]] #ClassC
