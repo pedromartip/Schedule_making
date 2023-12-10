@@ -225,28 +225,6 @@ def teacher_overload(teachers, schedules, dict_by_numbers, max_hours_per_day):
             score = 2
     return score  # Constraint satisfied
 
-def classes_at_schedule_bounds(schedules, dict_by_numbers):
-    bounds_with_no_class = {}
-    
-    for x, subjects in dict_by_numbers.items():
-        _schedule = [np.isin(schedule, subjects) for schedule in schedules]
-        bounds = []
-
-        for schedule in _schedule:
-            indices = np.where(schedule)[0]
-            
-            # Check if there's no class at the beginning or end of the schedule
-            if indices.size > 0:
-                if indices[0] == 0:
-                    bounds.append(1)  # No class at the first hour
-                if indices[-1] == len(schedule) - 1:
-                    bounds.append(1)  # No class at the last hour
-
-        bounds_with_no_class[x] = sum(bounds)
-
-    total_bounds = sum(bounds_with_no_class.values())
-    return total_bounds
-
 ''' FITNESS FUNCTION '''
 def fitness_function(teachers, schedules, dict_by_numbers):
         #HARD CONSTRAINTS
@@ -257,10 +235,9 @@ def fitness_function(teachers, schedules, dict_by_numbers):
         #SOFT CONSTRAINTS
     soft_score1 = calculate_repetition_score(schedules, dict_by_numbers)
     soft_score2 = teacher_overload(teachers,schedules,dict_by_numbers,5)
-    soft_score3 = classes_at_schedule_bounds(schedules, dict_by_numbers)
     
     
-    function = 30*hard_score1 + 30*hard_score2 - 1*soft_score1 - 1*soft_score2 - 1*soft_score3
+    function = 30*hard_score1 + 30*hard_score2 - 1*soft_score1 - 1*soft_score2
     
     hard_constraints = hard_score1 + hard_score2
     if hard_constraints != 0: 
@@ -272,7 +249,6 @@ def fitness_function(teachers, schedules, dict_by_numbers):
     #print('H2= ',hard_score2)
     #print('S1= ',soft_score1)
     #print('S2= ',soft_score2)
-    #print('S3= ',soft_score3)
     
     return function if function > 0 else 0, x 
 
