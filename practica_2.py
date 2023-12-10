@@ -3,6 +3,8 @@ import copy
 import sys
 import random
 import matplotlib.pyplot as plt
+import textwrap
+
 
 ''' INICIALIZACIÓN DE LOS DATOS Y OTRAS FUNCIONES ''' 
 
@@ -12,6 +14,24 @@ def assign_labels(names,hours): #Genera la cantidad de horas establecidas para c
         for i in range(hour):
             nameLabel = f'{name}'
             labels.append(nameLabel)
+
+    return labels
+
+def assign_labels2(names, hours):
+    labels = []
+    sorted_hours_names = sorted(zip(hours, names))
+
+    min_hour = sorted_hours_names[0][0]
+
+    # Primero escriba la misma cantidad de veces todos los nombres
+    for hour, name in sorted_hours_names:
+        labels.extend([name]*min_hour)
+
+    # Luego escriba las horas restantes del nombre con más horas
+    for hour, name in sorted_hours_names:
+        remaining_hours = hour - min_hour
+        if remaining_hours > 0:
+            labels.extend([name]*remaining_hours)
 
     return labels
 
@@ -72,9 +92,6 @@ def choose_best_prospect(teachers, dict_by_numbers, population):
     best_schedule = population[min_index]
     
     return best_schedule
-    
-    
- 
 
 ''' GENERACIÓN DE LA POBLACIÓN INICIAL '''
 def create_class_schedule(hoursClass, hours_per_week, totalHours, Index, dict_by_strings):
@@ -198,13 +215,18 @@ def fitness_function(teachers, schedules, dict_by_numbers):
         #SOFT CONSTRAINTS
     soft_score1 = calculate_repetition_score(schedules, dict_by_numbers)
     function = 10*hard_score1 + 10*hard_score2 - 2*soft_score1 
+    hard_constraints = 10*hard_score1 + 10*hard_score2
+    if hard_constraints != 0: 
+        x = 'True'
+    else: 
+        x = 'False'
     
-    return function if function > 0 else 0
+    return function if function > 0 else 0, x 
 
 def population_fitness_function(teachers, dict_by_numbers, population):
     all_fitness_functions = []
     for i in range(len(population)):
-        value = fitness_function(teachers, population[i], dict_by_numbers)
+        value, x = fitness_function(teachers, population[i], dict_by_numbers)
         all_fitness_functions.append(value)
         
     return all_fitness_functions
@@ -247,8 +269,7 @@ TOURNAMENT SELECTION
 def tournament_selection(population, fitness_scores, tournament_size=3):
     # Initialize an empty list to store the randomly selected schedules
     selected_schedules = []
-    #print(f'population: {len(population)}')
-    #print('EMPIEZA EL TORNEO..')
+
     # Randomly pick 'tournament_size' number of schedules
     for _ in range(tournament_size):
         random_index = random.randint(0, len(population) - 1)
@@ -261,7 +282,6 @@ def tournament_selection(population, fitness_scores, tournament_size=3):
     first_best = selected_schedules[0][0]
     second_best = selected_schedules[1][0]
 
-    #print(f'Se ha elejido el padre1: {first_best}\n y el padre2: {second_best}')
     return first_best, second_best
 
 ''' COMBINATION '''
@@ -347,26 +367,19 @@ def elitist_selection(population, fitnesses, population_size):
     
     return new_population
 
-def plot_schedule(schedule,hours_per_week):
+''' PLOT SCHEDULES '''
+
+def plot_schedule(schedule, hours_per_week, dict_by_numbers):
     days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
-    hours = list(range(8, 8+hours_per_week))
+    hours = list(range(8, 8 + hours_per_week))
 
- # Define colors for each subject
-    subject_colors = {
-        0: 'yellow',  # Empty
-        1: 'cyan',
-        2: 'limegreen',
-        3: '#f73e3e',  # light red
-        4: 'orange',
-    }
+    # Define colors for each subject ignoring professors
+    unique_subjects = set([val for val in dict_by_numbers.values()])
+    subject_colors = {subject: plt.cm.tab10(i) for i, subject in enumerate(unique_subjects)}
+    subject_colors['---'] = '#ffff8f' #yellow for empty cells
 
-    subjects = {
-        0: '---',
-        1: 'Maths',
-        2: 'Physics',
-        3: 'Socials',
-        4: 'Lengua',
-    }
+    subjects = {key: val for key, val in dict_by_numbers.items()}
+    subjects[0] = '---' #change empty cells content to ---
 
     for class_idx, class_schedule in enumerate(schedule):
         # Plotting the schedule with custom colors
@@ -376,17 +389,21 @@ def plot_schedule(schedule,hours_per_week):
         for i in range(len(hours)):
             for j in range(len(days)):
                 subject_idx = int(class_schedule[i][j])
-                color = subject_colors.get(subject_idx, 'yellow')  # Default color for empty cells
+                subject_name = subjects[subject_idx]
+                color = subject_colors.get(subject_name, 'yellow')  # Default color for '---' cells
                 # Draw a border rectangle for each subject cell
-                rect = plt.Rectangle((j - 0.5, (len(hours) - i - 1) - 0.5), 1, 1, fill=True, edgecolor='black', facecolor=color, linewidth=2)
+                rect = plt.Rectangle((j - 0.5, (len(hours) - i - 1) - 0.5), 1, 1, fill=True, edgecolor='black',
+                                     facecolor=color, linewidth=2)
                 ax.add_patch(rect)
-                plt.text(j, (len(hours) - i - 1), subjects[subject_idx], ha='center', va='center', color='black', fontweight='bold', fontsize=8)
+                wrapped_text = textwrap.fill(subject_name, width=10)  # Adjust 'width' as needed
+                plt.text(j, (len(hours) - i - 1), wrapped_text, ha='center', va='center',
+                         color='black', fontweight='bold', fontsize=9)
 
         plt.title(f'Class {class_idx + 1} Schedule', fontweight='bold', fontsize=14)
         plt.xlabel('Days')
         plt.ylabel('Hours')
         plt.xticks(ticks=np.arange(0, len(days), 1), labels=days, ha='center')
-        plt.yticks(ticks=range(len(hours)), labels=[f'{h}:00' for h in reversed(hours)])
+        plt.yticks(ticks=range(len(hours)), labels=[f'{h}:00 to {h+1}:00' for h in reversed(hours)])
         ax.xaxis.tick_top()  # X-axis on top
         ax.xaxis.set_label_position('top')
         ax.set_xlim(-0.5, len(days) - 0.5)  # Set proper limits for x-axis
@@ -403,16 +420,14 @@ if __name__ == "__main__":
     '''
     INICIALIZAMOS LOS DATOS PARA CREAR LOS INDIVIDUOS DE LA POBLACIÓN
     '''
-    hours_per_week = 3 #Number of work hours per week
-    subjectsName = ['Math', 'Pyshics', 'Socials', 'Lengua']
-    hoursClass = [[2,2,1,2],
-                  [3,2,3,3],
-                  [1,2,2,2]]
+    hours_per_week = 8 #Number of work hours per week
+    subjectsName = ['Math', 'Pyshics', 'Socials', 'Lengua', 'English', 'Phy. Educ.', 'Religion']
+    hoursClass = [[1,2,5,2], [4,1,7,3], [1,3,1,3], [3,2,1,3], [1,2,2,3], [1,3,2,3], [3,1,1,3]]
+    teachers = ['Paco', 'Luis', 'Clara','Sebastian','Judith']
+    availTime = [16,20,17,11,9]
     
-    teachers = ['Paco', 'Luis']
-    availTime = [13,13]
-    
-    Teachers = assign_labels(teachers, availTime)
+    #Teachers = assign_labels(teachers, availTime)
+    Teachers = assign_labels2(teachers, availTime) # Mejora 'assign_labels'
     
     totalHours = total_subject_hours(hoursClass)
     max_hours_per_week = calculate_max_hours(hoursClass)
@@ -423,7 +438,7 @@ if __name__ == "__main__":
     '''
     GENERAMOS LA POBLACIÓN INICIAL
     '''
-    population_size = 30
+    population_size = 20
     
     if sum(totalHours) <= sum(availTime):
         Index = assign_localization(Subjects, Teachers)
@@ -445,11 +460,11 @@ if __name__ == "__main__":
     EMPIEZA EL ALGORITMO
     '''
     
-        #Inicializamos las variables
+    #Inicializamos las variables
     best_score = 1000
     generation = 0
-    max_generations = 200
-    fitness_goal = 10
+    max_generations = 10
+    fitness_goal = 0
     mutation_rate = 0.4
     
     while generation < max_generations:
@@ -458,8 +473,11 @@ if __name__ == "__main__":
         totalfitness = population_fitness_function(teachers, dict_by_numbers, population)
         
         #REALIZAMOS LA SELECCIÓN DE LOS PADRES
-        #padre1, padre2 = ranking_selection(population, totalfitness)
-        padre1, padre2 = tournament_selection(population, totalfitness)
+       
+        # padre1, padre2 = tournament_selection(population, totalfitness)
+        
+        # Mejora para elegir los padres
+        padre1, padre2 = ranking_selection(population, totalfitness)
         
         #REALIZAMOS LA GENERACIÓN DE LOS DESCENDIENTES
         #hijo1, hijo2 = uniform_crossover(padre1, padre2)
@@ -484,14 +502,18 @@ if __name__ == "__main__":
         
         #EXTRAEMOS EL MEJOR PROSPECTO DE LA NUEVA POBLACIÓN
         best_prospect = choose_best_prospect(teachers, dict_by_numbers, population)
-        best_score = fitness_function(teachers, best_prospect, dict_by_numbers)
-        print(totalfitness)
+        best_score, have_constraints = fitness_function(teachers, best_prospect, dict_by_numbers)
+        #print(totalfitness)
         print('Fitness Function del mejor horario: ',best_score)
+        #print('Tiene hard constraints? ',have_constraints)
         print('Iteracion: ',generation)
         generation +=1
         if best_score < fitness_goal: break
-    
+
+    if(best_score >= 10):
+        print("More iterations are needed to fins an optimal schedule that meet the hard constrains")
     print(best_prospect)
+    plot_schedule(best_prospect, hours_per_week, dict_by_numbers)
     
 
 
