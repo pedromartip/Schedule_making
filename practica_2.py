@@ -400,12 +400,18 @@ if __name__ == "__main__":
     '''
     hours_per_week = 8 #Number of work hours per week
     subjectsName = ['Math', 'Pyshics', 'Socials', 'Lengua', 'English', 'Phy. Educ.', 'Religion']
-    hoursClass = [[1,2,5,2], [4,1,7,3], [1,3,1,3], [3,2,1,3], [1,2,2,3], [1,3,2,3], [3,1,1,3]]
+    hoursClass = [[1,2,5,2], #ClassA
+                  [4,1,7,3], #ClassB
+                  [1,3,1,3], #etc ...
+                  [3,2,1,3], 
+                  [1,2,2,3], 
+                  [1,3,2,3], 
+                  [3,1,1,3]]
     teachers = ['Paco', 'Luis', 'Clara','Sebastian','Judith']
     availTime = [16,20,17,11,9]
     
     #Teachers = assign_labels(teachers, availTime)
-    Teachers = assign_labels2(teachers, availTime) # Mejora 'assign_labels'
+    Teachers = assign_labels2(teachers, availTime) # Improve 'assign_labels'
     
     totalHours = total_subject_hours(hoursClass)
     max_hours_per_week = calculate_max_hours(hoursClass)
@@ -450,36 +456,36 @@ if __name__ == "__main__":
         totalfitness = population_fitness_function(teachers, dict_by_numbers, population)
 
         '''
-        2. FATHERS SELECTION
+        2. PARENTS SELECTION
         '''
-        # padre1, padre2 = tournament_selection(population, totalfitness)
+        # parent1, parent2 = tournament_selection(population, totalfitness)
         
-        # Mejora para elegir los padres
-        padre1, padre2 = ranking_selection(population, totalfitness)
+        # Improve to choose fathers
+        parent1, parent2 = ranking_selection(population, totalfitness)
         
         '''
         3. GENERATION OF DESCENDANTS
         '''
-        #hijo1, hijo2 = uniform_crossover(padre1, padre2)
-        hijo1 = recombination(padre1, padre2, hours_per_week)
-        hijo2 = recombination(padre1, padre2, hours_per_week)
+        #child1, child2 = uniform_crossover(parent1, parent2)
+        child1 = recombination(parent1, parent2, hours_per_week)
+        child2 = recombination(parent1, parent2, hours_per_week)
         
-        #hijo1 = recombination_with_hours(padre1, padre2, hoursClass)
-        #hijo2 = recombination_with_hours(padre1, padre2, hoursClass)
+        #child1 = recombination_with_hours(parent1, parent2, hoursClass)
+        #child2 = recombination_with_hours(parent1, parent2, hoursClass)
         
         '''
         4. MUTATION
         '''
 
         if random.random() < mutation_rate:
-            swap_mutation(hijo1)
-            swap_mutation(hijo2)
+            swap_mutation(child1)
+            swap_mutation(child2)
         
         '''
         5. AGGREGATION OF CHILDREN TO THE POPULATION
         '''
-        population[len(population)] = hijo1
-        population[len(population)] = hijo2
+        population[len(population)] = child1
+        population[len(population)] = child2
 
         '''
         6. SURVIVORS SELECTION
