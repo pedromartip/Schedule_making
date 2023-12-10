@@ -466,7 +466,6 @@ if __name__ == "__main__":
     best_score = 1000
     generation = 0
     max_generations = 1000
-    fitness_goal = 0
     mutation_rate = 0.4
     
     while generation < max_generations:
@@ -521,7 +520,7 @@ if __name__ == "__main__":
         print('Have hard constraints? ',have_constraints)
         print('Iteration: ',generation)
         generation +=1
-        if best_score < fitness_goal or have_constraints == 'False': break
+        if have_constraints == 'False': break
 
     if(best_score >= 10):
         print("More iterations are needed to fins an optimal schedule that meet the hard constrains")
