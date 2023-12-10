@@ -6,9 +6,9 @@ import matplotlib.pyplot as plt
 import textwrap
 
 
-''' INICIALIZACIÓN DE LOS DATOS Y OTRAS FUNCIONES ''' 
+''' DATA INITIALIZATION AND OTHER FUNCTIONS''' 
 
-def assign_labels(names,hours): #Genera la cantidad de horas establecidas para cada nombre en 'names'
+def assign_labels(names,hours): #Generate the specified number of hours for each name in 'names'
     labels = []
     for name, hour in zip(names, hours):
         for i in range(hour):
@@ -22,12 +22,10 @@ def assign_labels2(names, hours):
     sorted_hours_names = sorted(zip(hours, names))
 
     min_hour = sorted_hours_names[0][0]
-
-    # Primero escriba la misma cantidad de veces todos los nombres
+    # First, assign an equal number of hours to all names
     for hour, name in sorted_hours_names:
         labels.extend([name]*min_hour)
-
-    # Luego escriba las horas restantes del nombre con más horas
+    # Then, assign the remaining hours from the name with the most hours
     for hour, name in sorted_hours_names:
         remaining_hours = hour - min_hour
         if remaining_hours > 0:
@@ -35,7 +33,7 @@ def assign_labels2(names, hours):
 
     return labels
 
-def total_subject_hours(hoursClass): #Calcula la cantidad total de horas de cada materia de todos los cursos
+def total_subject_hours(hoursClass): #Calculate the total number of hours for each subject across all courses
     num_rows = len(hoursClass)
     num_columns = len(hoursClass[0]) if num_rows > 0 else 0
     
@@ -46,7 +44,7 @@ def total_subject_hours(hoursClass): #Calcula la cantidad total de horas de cada
             total_sum[index_column] += value
     return total_sum    
 
-def assign_localization(subjects, teachers): #Crea un indice para saber la cantidad total de horas a asignar en los horarios
+def assign_localization(subjects, teachers): #Create an index to track the total number of hours to be assigned in the schedules
     index = ['Empty']
     for subject, teacher in zip(subjects,teachers):
         name = f'{subject} with {teacher}'
@@ -54,7 +52,7 @@ def assign_localization(subjects, teachers): #Crea un indice para saber la canti
         
     return index
 
-def assign_dictionaries(Index): #Genera los diccionarios para ubicar que significan los enteros dentro de los horarios
+def assign_dictionaries(Index): #Generate dictionaries to map the meaning of integers within the schedules
     strings = {}
     counts = 0
     
@@ -64,15 +62,15 @@ def assign_dictionaries(Index): #Genera los diccionarios para ubicar que signifi
             counts += 1
     numbers = {v: k for k, v in strings.items()}
     
-    return strings, numbers #Entrega resultados para poder acceder a los diccionarios, con los números y con los caracteres 
+    return strings, numbers #Provide results to access the dictionaries, both with the numbers and the corresponding strings
 
-def calculate_max_hours(hoursClass): #Calculamos cual es la cantidad máxima de horas que se tienen que dar en un sólo curso
+def calculate_max_hours(hoursClass): #Calculate the maximum number of hours that need to be taught in a single course
     sum_rows = [sum(row) for row in hoursClass]
     max_number = max(sum_rows)
     
     return max_number
 
-def generate_subjects_dict(dict_by_numbers): #Ubica y une las materias que se repiten que son impartidas por 2 profesores
+def generate_subjects_dict(dict_by_numbers): #Locate and combine subjects that are repeated and taught by two different teachers
     # Generate the subjects dictionary
     subjects = {}
     for number, subject in dict_by_numbers.items():
@@ -93,13 +91,13 @@ def choose_best_prospect(teachers, dict_by_numbers, population):
     
     return best_schedule
 
-''' GENERACIÓN DE LA POBLACIÓN INICIAL '''
+''' GENERATION OF THE INITIAL POPULATION '''
 def create_class_schedule(hoursClass, hours_per_week, totalHours, Index, dict_by_strings):
     schedules = []  
     totalHour = copy.deepcopy(totalHours)
     temp = copy.deepcopy(Index)
     
-    for classes in hoursClass: #classes = [2,2,1]
+    for classes in hoursClass:
 
         index_init = 1
         schedule = np.zeros((hours_per_week, 5))
@@ -110,14 +108,10 @@ def create_class_schedule(hoursClass, hours_per_week, totalHours, Index, dict_by
                 while schedule[random_row,random_column] != 0.0:
                     random_row = np.random.randint(0, hours_per_week)
                     random_column = np.random.randint(0, 5)
-                    
-                #Codigo aqui
                 element = temp.pop(index_init)
                 number = dict_by_strings[element]
                 schedule[random_row, random_column] = number
                 totalHour[count]-=1
-                #Fin codigo
-                
             index_init += totalHour[count]
                 
         schedules.append(schedule)  
@@ -148,10 +142,10 @@ def generate_mix_population(population_size, hoursClass, hours_per_week, totalHo
     population = {}
 
     for i in range(population_size):
-        # Si i es par, llamar a create_class_schedule
+        # If i is even, call the function create_class_schedule.
         if i % 2 == 0:
             individual = create_class_schedule(hoursClass, hours_per_week, totalHours, Index, dict_by_strings)
-        # Si i es impar, llamar a generate_schedules_aleatorially
+        #If i is odd, call the function generate_schedules_aleatorially
         else:
             individual = generate_schedules_aleatorially(dict_by_strings, hoursClass, hours_per_week)
         population[i] = individual
@@ -161,7 +155,7 @@ def generate_mix_population(population_size, hoursClass, hours_per_week, totalHo
 
 ''' CONSTRAINTS '''
     #HARD CONSTRAINT
-def count_teacher_at_same_time(teacher, schedules, dict_by_numbers): #Verifica si un profesor está en dos cursos al mismo tiempo
+def count_teacher_at_same_time(teacher, schedules, dict_by_numbers): #Check if a teacher is scheduled in two courses at the same time
     teacher_schedules = [np.isin(schedule, [key for key, value in dict_by_numbers.items() if teacher in value]) for schedule in schedules]
     count = 0
     for i in range(len(teacher_schedules) - 1):
@@ -169,13 +163,11 @@ def count_teacher_at_same_time(teacher, schedules, dict_by_numbers): #Verifica s
             count += np.sum(np.logical_and(teacher_schedules[i], teacher_schedules[j]))
     return count
 
-def count_subjects_in_schedules(schedules, dict_by_numbers):
+def count_subjects_in_schedules(schedules, dict_by_numbers): #Count if the subjects in the schedules match those specified by the user
     subjects = generate_subjects_dict(dict_by_numbers) 
 
     all_counts = []
-    # Recorrer cada horario y contar las asignaturas
     for schedule in schedules:
-        # Crear un diccionario para almacenar los conteos
         subject_counts = {subject: 0 for subject in subjects.keys()}
         for row in range(len(schedule)):
             for column in range(len(schedule[row])):
@@ -192,10 +184,11 @@ def count_subjects_in_schedules(schedules, dict_by_numbers):
 
     return total_score
 
-    #SOFT CONSTRAINTS
-def calculate_repetition_score(schedules, dict_by_numbers): #Calcula si las materias que son las mismas estan seguidas una de otra
+#SOFT CONSTRAINTS
+def calculate_repetition_score(schedules, dict_by_numbers): #Calculate if the subjects that are the same are consecutive
     subjects = generate_subjects_dict(dict_by_numbers)    
-# Calculate the score
+    
+    # Calculate the score
     score = 0
     for schedule in schedules:
         for column in range(schedule.shape[1]):
@@ -207,12 +200,13 @@ def calculate_repetition_score(schedules, dict_by_numbers): #Calcula si las mate
 
 ''' FITNESS FUNCTION '''
 def fitness_function(teachers, schedules, dict_by_numbers):
-        #HARD CONSTRAINTS
+    #HARD CONSTRAINTS
     hard_score1 = 0
     for teacher in teachers:  
         hard_score1 += count_teacher_at_same_time(teacher, schedules, dict_by_numbers) 
     hard_score2 = count_subjects_in_schedules(schedules, dict_by_numbers)
-        #SOFT CONSTRAINTS
+    
+    #SOFT CONSTRAINTS
     soft_score1 = calculate_repetition_score(schedules, dict_by_numbers)
     function = 10*hard_score1 + 10*hard_score2 - 2*soft_score1 
     hard_constraints = 10*hard_score1 + 10*hard_score2
@@ -220,6 +214,10 @@ def fitness_function(teachers, schedules, dict_by_numbers):
         x = 'True'
     else: 
         x = 'False'
+
+    #print('H1= ',hard_score1)
+    #print('H2= ',hard_score2)
+    #print('S1= ',soft_score1)
     
     return function if function > 0 else 0, x 
 
@@ -238,7 +236,7 @@ def sort_by_fitness(population, all_fitness_functions):
     
     return combined
 
-        #Ranking Selection
+#Ranking Selection
 def ranking_selection(population, all_fitness_functions):
     index_population_sorted = sort_by_fitness(population, all_fitness_functions)
     xi, index = zip(*index_population_sorted)
@@ -247,7 +245,9 @@ def ranking_selection(population, all_fitness_functions):
     probabilities = []
     if s > 1 & s <= 2:
         for i in range(len(xi)):
-            value = ((2-s)/u) + ((2*i*(s-1))/(u*(u-1))) #Si necesitamos que escoja valores mas áltos hay que implementar otra fórmula
+            value = ((2-s)/u) + ((2*i*(s-1))/(u*(u-1))) 
+            #If we need it to choose only higher values, another formula must be implemented
+            #(1 - e^-i)/c
             probabilities.append(value)
             
     index = list(range(len(probabilities)))
@@ -263,9 +263,7 @@ def ranking_selection(population, all_fitness_functions):
     
     return rank1, rank2      
         
-"""
-TOURNAMENT SELECTION
-"""
+#Tournament Selection
 def tournament_selection(population, fitness_scores, tournament_size=3):
     # Initialize an empty list to store the randomly selected schedules
     selected_schedules = []
@@ -277,7 +275,7 @@ def tournament_selection(population, fitness_scores, tournament_size=3):
         #print(f'Se ha elegido a {f"schedules{random_index}"}, con una puntuación de {fitness_scores[random_index]}')
    
     # Sort the selected schedules by their fitness scores in descending order
-    selected_schedules.sort(key=lambda x: x[1], reverse=False)  # Reverse = True --> Ponemos primero la de mas high score 
+    selected_schedules.sort(key=lambda x: x[1], reverse=False)  # Reverse = False --> Less score is a better score, so the first will be the smallest score
     # Select the schedule with the smallest fitness score (As smaller better is the score)
     first_best = selected_schedules[0][0]
     second_best = selected_schedules[1][0]
@@ -285,7 +283,6 @@ def tournament_selection(population, fitness_scores, tournament_size=3):
     return first_best, second_best
 
 ''' COMBINATION '''
-#Primer tipo de recombinación : Jason
 def uniform_crossover(parent1, parent2):
     child1 = []
     child2 = []
@@ -299,7 +296,6 @@ def uniform_crossover(parent1, parent2):
         child2.append(child_group2)  
     return child1, child2  
 
-#Segundo tipo de recombinación : Pedro
 def recombination(parent1, parent2, hours_per_week): 
 
     child_schedule = []
@@ -307,7 +303,7 @@ def recombination(parent1, parent2, hours_per_week):
     for i in range(len(parent1)):
 
         cut_point_row = random.randint(1, hours_per_week - 1)
-        cut_point_col = random.randint(1, 4)  # 4 porque hay 5 días (columnas)
+        cut_point_col = random.randint(1, 4)  # 4 because there are 5 days (columns)
 
         top_left = parent1[i][:cut_point_row, :cut_point_col]
         top_right = parent2[i][:cut_point_row, cut_point_col:]
@@ -322,7 +318,6 @@ def recombination(parent1, parent2, hours_per_week):
     return child_schedule   
 
 ''' MUTATION '''
-    #Primer tipo de mutación : Jason
 def swap_mutation(individual, drastic=False):
     for group in individual:
         row1, col1 = np.random.randint(0, group.shape[0]), np.random.randint(0, group.shape[1])
@@ -342,22 +337,6 @@ def swap_mutation(individual, drastic=False):
                 row4, col4 = np.random.randint(0, group.shape[0]), np.random.randint(0, group.shape[1])
 
             group[row3, col3], group[row4, col4] = group[row4, col4], group[row3, col3]
-    
-    #Segundo tipo de mutación : Iván
-def mutation(schedule):
-    mutated_schedule = []
-
-    for class_schedule in schedule:
-        non_zero_elements = [(i, j) for i in range(len(class_schedule)) for j in range(len(class_schedule[i])) if class_schedule[i][j] != 0]
-        random.shuffle(non_zero_elements)
-
-        mutated_class_schedule = np.zeros_like(class_schedule)
-        for idx, (i, j) in enumerate(non_zero_elements):
-            mutated_class_schedule[i][j] = class_schedule[non_zero_elements[idx - 1][0]][non_zero_elements[idx - 1][1]]
-
-        mutated_schedule.append(mutated_class_schedule)
-
-    return mutated_schedule
 
 ''' SURVIVOR SELECTION '''
 def elitist_selection(population, fitnesses, population_size):
@@ -368,7 +347,6 @@ def elitist_selection(population, fitnesses, population_size):
     return new_population
 
 ''' PLOT SCHEDULES '''
-
 def plot_schedule(schedule, hours_per_week, dict_by_numbers):
     days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
     hours = list(range(8, 8 + hours_per_week))
@@ -418,7 +396,7 @@ if __name__ == "__main__":
     
 
     '''
-    INICIALIZAMOS LOS DATOS PARA CREAR LOS INDIVIDUOS DE LA POBLACIÓN
+    INITIALIZATION OF THE DATA TO CREATE THE INDIVIDUALS OF THE POPULATION
     '''
     hours_per_week = 8 #Number of work hours per week
     subjectsName = ['Math', 'Pyshics', 'Socials', 'Lengua', 'English', 'Phy. Educ.', 'Religion']
@@ -436,7 +414,7 @@ if __name__ == "__main__":
             
     
     '''
-    GENERAMOS LA POBLACIÓN INICIAL
+    INITIAL POBLATION GENERATION
     '''
     population_size = 20
     
@@ -449,37 +427,39 @@ if __name__ == "__main__":
             #population =  generate_population(population_size, hoursClass, hours_per_week, totalHours, Index, dict_by_strings)
             population = generate_mix_population(population_size, hoursClass, hours_per_week, totalHours, Index, dict_by_strings)
         else: 
-            sys.exit('Error en los datos, AUMENTE la disponibilidad de horas a la semana')
+            sys.exit('Error in the data, INCREASE the availability of hours per week')
             
     else:
-        sys.exit('Error en los datos, AUMENTE la disponibilidad de los profesores')
-        
+        sys.exit('Error in the input data, INCREASE the availability of hours per teacher')
         
         
     '''
-    EMPIEZA EL ALGORITMO
+    BEGINNING OF THE ALGORITHM
     '''
-    
-    #Inicializamos las variables
     best_score = 1000
     generation = 0
-    max_generations = 10
+    max_generations = 200
     fitness_goal = 0
     mutation_rate = 0.4
     
     while generation < max_generations:
         
-        #CALCULAMOS EL FITNESS FUNCTION
+        '''
+        1. FITNESS FUNCTION CALCULATION
+        '''
         totalfitness = population_fitness_function(teachers, dict_by_numbers, population)
-        
-        #REALIZAMOS LA SELECCIÓN DE LOS PADRES
-       
+
+        '''
+        2. FATHERS SELECTION
+        '''
         # padre1, padre2 = tournament_selection(population, totalfitness)
         
         # Mejora para elegir los padres
         padre1, padre2 = ranking_selection(population, totalfitness)
         
-        #REALIZAMOS LA GENERACIÓN DE LOS DESCENDIENTES
+        '''
+        3. GENERATION OF DESCENDANTS
+        '''
         #hijo1, hijo2 = uniform_crossover(padre1, padre2)
         hijo1 = recombination(padre1, padre2, hours_per_week)
         hijo2 = recombination(padre1, padre2, hours_per_week)
@@ -487,26 +467,34 @@ if __name__ == "__main__":
         #hijo1 = recombination_with_hours(padre1, padre2, hoursClass)
         #hijo2 = recombination_with_hours(padre1, padre2, hoursClass)
         
-        #APLICAMOS LA MUTACIÓN
+        '''
+        4. MUTATION
+        '''
+
         if random.random() < mutation_rate:
             swap_mutation(hijo1)
             swap_mutation(hijo2)
         
-        #AGREGAMOS LOS HIJOS A LA POBLACIÓN
+        '''
+        5. AGGREGATION OF CHILDREN TO THE POPULATION
+        '''
         population[len(population)] = hijo1
         population[len(population)] = hijo2
-        
-        #REALIZAMOS LA SELECCIÓN DE SOBREVIVIENTES
+
+        '''
+        6. SURVIVORS SELECTION
+        '''
         totalfitness = population_fitness_function(teachers, dict_by_numbers, population)
         population = elitist_selection(population, totalfitness, population_size)
         
-        #EXTRAEMOS EL MEJOR PROSPECTO DE LA NUEVA POBLACIÓN
+        '''
+        7. EXTRACTING THE BEST PROSPECT OF THE NEW POPULATION'''
         best_prospect = choose_best_prospect(teachers, dict_by_numbers, population)
         best_score, have_constraints = fitness_function(teachers, best_prospect, dict_by_numbers)
         #print(totalfitness)
-        print('Fitness Function del mejor horario: ',best_score)
+        print('Fitness Function of the best schedule: ',best_score)
         #print('Tiene hard constraints? ',have_constraints)
-        print('Iteracion: ',generation)
+        print('Iteration: ',generation)
         generation +=1
         if best_score < fitness_goal: break
 
