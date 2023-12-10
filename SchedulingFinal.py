@@ -268,11 +268,11 @@ def fitness_function(teachers, schedules, dict_by_numbers):
     else: 
         x = 'False'
         
-    print('H1= ',hard_score1)
-    print('H2= ',hard_score2)
-    print('S1= ',soft_score1)
-    print('S2= ',soft_score2)
-    print('S3= ',soft_score3)
+    #print('H1= ',hard_score1)
+    #print('H2= ',hard_score2)
+    #print('S1= ',soft_score1)
+    #print('S2= ',soft_score2)
+    #print('S3= ',soft_score3)
     
     return function if function > 0 else 0, x 
 
