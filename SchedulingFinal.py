@@ -1,10 +1,4 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sun Dec 10 12:44:01 2023
-
-@author: jaadn
-"""
-
+''' HANDOUT 2: EVOLUTIONARY ALGORITHM '''
 import numpy as np
 import copy
 import sys
@@ -524,7 +518,7 @@ if __name__ == "__main__":
         best_score, have_constraints = fitness_function(teachers, best_prospect, dict_by_numbers)
         #print(totalfitness)
         print('Fitness Function of the best schedule: ',best_score)
-        print('Tiene hard constraints? ',have_constraints)
+        print('Have hard constraints? ',have_constraints)
         print('Iteration: ',generation)
         generation +=1
         if best_score < fitness_goal or have_constraints == 'False': break
