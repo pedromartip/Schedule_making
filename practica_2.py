@@ -508,7 +508,7 @@ if __name__ == "__main__":
         print("More iterations are needed to fins an optimal schedule that meet the hard constrains")
     print(best_prospect)
     plot_schedule(best_prospect, hours_per_week, dict_by_numbers)
-    
+    #Commit changes
 
 
     
